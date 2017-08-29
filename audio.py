@@ -3,6 +3,7 @@ import numpy as np
 from matplotlib.mlab import find
 import math
 import serial
+import keyboard
 
 
 CHUNK = 2**11
@@ -11,28 +12,32 @@ MAX_AMP = 16000.0 # <- Adjust this based on input level
 MAX_FREQ = 10000.0
 PORT = '/dev/cu.usbmodem100'
 
-# Within each mode type, we can define many color ramps
-# We will reference these by the index of the ramp
-ramp_index = 0
 
 # switch between amplitude, frequency, and random modes
 # amplitude = 0 frequency = 1 random = 2
-mode_type = 1
+#this equates to the first index of color_ramps (ie. color_ramps[0] = amplitude ramps)
+mode_type = 0  #always default to amplitude
 
-amp_color_ramps = [((0, 0, 0), (0, 0, 0), (54, 2, 2), (90, 0, 0), (126, 0, 0), (165, 0, 0), (209, 0, 0), (237, 0, 0), (255, 0, 0), (255, 35, 35), (255, 76, 76), (255, 115, 115), (255, 148, 148), (255, 187, 187), (255, 226, 226)),
+# controlled with the Makey Makey controller
+# if we have n numbers of ramps in a mode, then if mod(n+1) = 0 then we can change modes
+# current index inside the current color_ramps[mode_type] array
+ramp_index = 0 
+
+#color_ramps[0] = the amp_color_ramps
+#color_ramps[1] = the freq_color_ramps
+#color_ramps[2] = the random_color_ramps
+color_ramps = [
+((0, 0, 0), (0, 0, 0), (54, 2, 2), (90, 0, 0), (126, 0, 0), (165, 0, 0), (209, 0, 0), (237, 0, 0), (255, 0, 0), (255, 35, 35), (255, 76, 76), (255, 115, 115), (255, 148, 148), (255, 187, 187), (255, 226, 226)),
 ((0, 0, 0), (0, 0, 0), (2, 54, 2), (0, 90, 0), (0, 126, 0), (0, 165, 0), (0, 209, 0), (0, 237, 0), (0, 237, 0), (35, 255, 35), (76, 255, 76), (115, 255, 115), (148, 255, 148), (187, 255, 187), (226, 255, 226)), 
 ((80, 233, 246), (106, 198, 243), (134, 162, 238) , (165, 119, 234), (196, 79, 230), (225, 40, 226) , (248, 10, 223)),
 ((80, 233, 246), (76, 234, 232), (65, 237, 199) , (52, 240, 159), (39, 244, 118), (24, 248, 75) , (12, 251, 37), (3, 254, 9)),
 ((255, 0, 28), (255, 0, 253), (141, 0, 255) , (0, 26, 255), (0, 255, 238), (0, 255, 33) , (161, 255, 0), (255, 225, 0), (255, 95, 0)),
 ((0, 255, 2), (0, 198, 94), (8, 84, 255) , (112, 25, 255), (159, 7, 255), (158, 7, 255) ),
 ((246, 249, 3), (247, 226, 3), (249, 192, 0) , (250, 152, 1), (252, 114, 1), (253, 75, 1) , (254, 44, 0), (255, 24, 0)),
-((1, 251, 255), (53, 255, 189), (198, 255, 21) , (250, 244, 0), (255, 158, 72), (255, 69, 161) , (255, 3, 227))]
-freq_color_ramps = []
-
-random_color_ramps = []
-
-# More colors needed here...
-freq_colors = [(255,0,0),(0,255,0),(0,0,255)]
+((1, 251, 255), (53, 255, 189), (198, 255, 21) , (250, 244, 0), (255, 158, 72), (255, 69, 161) , (255, 3, 227)), #end amplitude
+((255,0,0),(0,255,0),(0,0,255)),#end frequency
+() #end random
+]
 
 p=pyaudio.PyAudio()
 stream=p.open(format=pyaudio.paInt16,channels=1,rate=RATE,input=True,
@@ -47,28 +52,48 @@ def Pitch(signal):
     f0=round(len(index) *RATE /(2*np.prod(len(signal))))
     return f0;
 
-# used to switch between color ramps
-# how often to switch - maybe this should be done with the Makey Makey controller?
-counter = 0
-i = 5 # index of the color_ramp array
 
 while True:
+    #detect keypress and if we receive the right key we will increment a counter
+    if keyboard.is_pressed('space'): 
+        ramp_index+=1
+
+    if ramp_index > len(color_ramps[mode_type]):
+        #change the mode and reset the counter
+        ramp_index = 0;
+        if (mode_type < 2):
+            mode_type+=1;
+        else:
+            mode_type = 0;            
+    else:
+        #increase the counter inside the same mode
+        ramp_index+=1;
+
+
     data = np.fromstring(stream.read(CHUNK),dtype=np.int16)
-    #if amp_mode:
-    peak=np.average(np.abs(data))*2
-    amp = peak/MAX_AMP
-    #print peak
-    num_colors = len(amp_color_ramps[i])
-    for j in range(num_colors):
-        if amp > j/(float(num_colors)):
-            color = amp_color_ramps[i][j]
-    #else:
-    #    Frequency=Pitch(data)
-    #    print "%f Frequency" %Frequency
-    #    num_colors = len(freq_colors)
-    #    for j in range(num_colors):
-    #        if Frequency/MAX_FREQ > j/(float(num_colors)):
-    #            color = freq_colors[j]
+
+    #set the number of color ramps we have
+    num_colors = len(color_ramps[ramp_index])
+
+    #determine the mode and act accordingly
+    if mode_type == 0:
+        #use the amplitude mode
+        peak=np.average(np.abs(data))*2
+        amp = peak/MAX_AMP
+        #print peak
+        for j in range(num_colors):
+            if amp > j/(float(num_colors)):
+                color = color_ramps[mode_type][ramp_index][j]
+    elif mode_type == 1:
+        #use the frequency mode
+        Frequency=Pitch(data)
+        print "%f Frequency" %Frequency        
+        for j in range(num_colors):
+            if Frequency/MAX_FREQ > j/(float(num_colors)):
+                color = color_ramps[mode_type][ramp_index][j]
+    else:
+        #use the random mode
+        print("implement the random mode here")
 
     # Arduino expects mode, R, G, B over Serial
     print("{0},{1},{2},{3}".format(mode_type, color[0], color[1], color[2]))
