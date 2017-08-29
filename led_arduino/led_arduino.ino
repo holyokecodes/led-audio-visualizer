@@ -39,7 +39,19 @@ void loop() {
       int green = Serial.parseInt();
       int blue = Serial.parseInt();
       if (isValidRGB(red) && isValidRGB(green) && isValidRGB(blue)) {
-        updateLightStrip(red, green, blue);
+        // runner = 0 whole string = 1 image = 2
+        if (mode == 1){
+          pixels.setPixelColor(0, pixels.Color(0,0,0));
+          updateWholeLightStrip(red, green, blue);
+        }else if (mode == 2){
+          pixels.setPixelColor(counter, pixels.Color(red, green, blue));
+          counter++;
+          pixels.show();
+          counter = 0;
+        }else{
+          updateLightStrip(red, green, blue);
+        }
+       
       }
    }
 }
@@ -66,5 +78,15 @@ bool updateLightStrip(int red, int green, int blue){
   }
   pixels.show(); // This sends the updated pixel color to the hardware.
   return true;
+}
+
+bool updateWholeLightStrip(int red, int green, int blue){
+  //set pixels to new color
+  for(int i = 0; i < NUMPIXELS; i++){
+    pixels.setPixelColor(i, pixels.Color(red, green, blue));
+  }
+  pixels.show();
+  return true;
+}
 }
 
