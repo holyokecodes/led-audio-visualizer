@@ -10,6 +10,7 @@ CHUNK = 2**11
 RATE = 44100
 MAX_AMP = 16000.0 # <- Adjust this based on input level
 MAX_FREQ = 10000.0
+RATE_OF_CHANGE = 500 # amount to adjust max values
 PORT = '/dev/cu.usbmodem100'
 
 # arrow key codes
@@ -83,19 +84,33 @@ while True:
 
     #determine the mode and act accordingly
     if amp_freq == 0:
+        if keyboard.is_pressed(down_arrow): 
+            if (current_amp > RATE_OF_CHANGE): # whats the lowest we can go here
+                current_amp = current_amp - RATE_OF_CHANGE
+        if keyboard.is_pressed(up_arrow): 
+            if (current_amp < MAX_AMP):
+                current_amp = current_amp + RATE_OF_CHANGE
+
         #use the amplitude mode
         peak=np.average(np.abs(data))*2
-        amp = peak/MAX_AMP
+        amp = peak/current_amp
         #print peak
         for j in range(num_colors):
             if amp > j/(float(num_colors)):
                 color = color_ramps[ramp_index][j]
     elif amp_freq == 1:
+        if keyboard.is_pressed(down_arrow): 
+            if (current_freq > RATE_OF_CHANGE): #whats the lowest we can go here?
+                current_freq = current_freq - RATE_OF_CHANGE
+        if keyboard.is_pressed(up_arrow): 
+            if (current_freq < MAX_FREQ):
+                current_freq = current_freq + RATE_OF_CHANGE
+
         #use the frequency mode
         Frequency=Pitch(data)
         print "%f Frequency" %Frequency        
         for j in range(num_colors):
-            if Frequency/MAX_FREQ > j/(float(num_colors)):
+            if Frequency/current_freq > j/(float(num_colors)):
                 color = color_ramps[ramp_index][j]
 
     # Arduino expects mode, R, G, B over Serial
