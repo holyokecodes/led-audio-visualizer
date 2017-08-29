@@ -11,7 +11,7 @@ RATE = 44100
 MAX_AMP = 16000.0 # <- Adjust this based on input level
 MAX_FREQ = 10000.0
 RATE_OF_CHANGE = 500 # amount to adjust max values
-PORT = '/dev/cu.usbmodem100'
+PORT = '/dev/cu.usbmodem108'
 
 # arrow key codes
 left_arrow  = 37
@@ -19,13 +19,15 @@ up_arrow    = 38
 right_arrow = 39
 down_arrow  = 40
 
+counter = 0
+
 # current vars
 current_amp = MAX_AMP;
 current_freq = MAX_FREQ;
 
 # amp vs freq will be hard coded for now
 # 0 = amp 1 = freq
-amp_freq = 0;
+amp_freq = 1;
 
 # switch between running, whole string, image
 # controlled with the Makey Makey controller
@@ -62,34 +64,36 @@ def Pitch(signal):
 
 while True:
     #detect keypress and if we receive the right key we will increment a counter
-    if keyboard.is_pressed('space'): 
-        ramp_index+=1
-        if ramp_index > len(color_ramps):
-            #change the mode and reset the counter
-            ramp_index = 0;
-            if (mode_type < 2):
-                mode_type+=1;
-            else:
-                mode_type = 0;            
-        else:
-            #increase the counter inside the same mode
-            ramp_index+=1;
+    #if keyboard.is_pressed('space'): 
+    #    ramp_index+=1
+        # if ramp_index == len(color_ramps) - 1:
+        #     #change the mode and reset the counter
+        #     ramp_index = 0;
+        #     if (mode_type < 2):
+        #         mode_type+=1;
+        #     else:
+        #         mode_type = 0;            
+        # else:
+        #     #increase the counter inside the same mode
+        #     ramp_index+=1;
 
 
     data = np.fromstring(stream.read(CHUNK),dtype=np.int16)
 
     #set the number of color ramps we have
+    print "ramp_index %i" %ramp_index
     num_colors = len(color_ramps[ramp_index])
+    print "num_colors %i" %num_colors
 
 
     #determine the mode and act accordingly
     if amp_freq == 0:
-        if keyboard.is_pressed(down_arrow): 
-            if (current_amp > RATE_OF_CHANGE): # whats the lowest we can go here
-                current_amp = current_amp - RATE_OF_CHANGE
-        if keyboard.is_pressed(up_arrow): 
-            if (current_amp < MAX_AMP):
-                current_amp = current_amp + RATE_OF_CHANGE
+        # if keyboard.is_pressed(down_arrow): 
+        #     if (current_amp > RATE_OF_CHANGE): # whats the lowest we can go here
+        #         current_amp = current_amp - RATE_OF_CHANGE
+        # if keyboard.is_pressed(up_arrow): 
+        #     if (current_amp < MAX_AMP):
+        #         current_amp = current_amp + RATE_OF_CHANGE
 
         #use the amplitude mode
         peak=np.average(np.abs(data))*2
@@ -99,12 +103,12 @@ while True:
             if amp > j/(float(num_colors)):
                 color = color_ramps[ramp_index][j]
     elif amp_freq == 1:
-        if keyboard.is_pressed(down_arrow): 
-            if (current_freq > RATE_OF_CHANGE): #whats the lowest we can go here?
-                current_freq = current_freq - RATE_OF_CHANGE
-        if keyboard.is_pressed(up_arrow): 
-            if (current_freq < MAX_FREQ):
-                current_freq = current_freq + RATE_OF_CHANGE
+        # if keyboard.is_pressed(down_arrow): 
+        #     if (current_freq > RATE_OF_CHANGE): #whats the lowest we can go here?
+        #         current_freq = current_freq - RATE_OF_CHANGE
+        # if keyboard.is_pressed(up_arrow): 
+        #     if (current_freq < MAX_FREQ):
+        #         current_freq = current_freq + RATE_OF_CHANGE
 
         #use the frequency mode
         Frequency=Pitch(data)
@@ -117,10 +121,20 @@ while True:
     print("{0},{1},{2},{3}".format(mode_type, color[0], color[1], color[2]))
     ser.write("{0},{1},{2},{3},".format(mode_type, color[0], color[1], color[2]))
 
-    #counter += 1
-    #if (counter > 100):
-    #    i = (i + 1) % 2
-    #    counter = 0
+    #testing loop should be replaced by keypress code
+    # counter += 1
+    # if (counter > 100):
+    #     if ramp_index == len(color_ramps) - 1:
+    #         #change the mode and reset the counter
+    #         ramp_index = 0;
+    #         # if (mode_type < 2):
+    #         #     mode_type+=1;
+    #         # else:
+    #         #     mode_type = 0;            
+    #     else:
+    #         #increase the counter inside the same mode
+    #         ramp_index+=1;
+    #     counter = 0
 
 
 ser.close()

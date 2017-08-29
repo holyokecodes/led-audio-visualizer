@@ -9,8 +9,10 @@
 
 #include <Adafruit_NeoPixel.h>
 
-#define PIN            6
-#define NUMPIXELS      5
+#define PIN           8
+#define NUMPIXELS      60
+
+int counter = 0; 
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800); 
 uint32_t lightstrip [NUMPIXELS];
@@ -87,6 +89,5 @@ bool updateWholeLightStrip(int red, int green, int blue){
   }
   pixels.show();
   return true;
-}
 }
 
