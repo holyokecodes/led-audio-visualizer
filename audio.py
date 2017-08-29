@@ -63,17 +63,16 @@ while True:
     #detect keypress and if we receive the right key we will increment a counter
     if keyboard.is_pressed('space'): 
         ramp_index+=1
-
-    if ramp_index > len(color_ramps):
-        #change the mode and reset the counter
-        ramp_index = 0;
-        if (mode_type < 2):
-            mode_type+=1;
+        if ramp_index > len(color_ramps):
+            #change the mode and reset the counter
+            ramp_index = 0;
+            if (mode_type < 2):
+                mode_type+=1;
+            else:
+                mode_type = 0;            
         else:
-            mode_type = 0;            
-    else:
-        #increase the counter inside the same mode
-        ramp_index+=1;
+            #increase the counter inside the same mode
+            ramp_index+=1;
 
 
     data = np.fromstring(stream.read(CHUNK),dtype=np.int16)
