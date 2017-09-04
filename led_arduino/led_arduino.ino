@@ -9,37 +9,39 @@
 
 #include <Adafruit_NeoPixel.h>
 
-#define PIN            6
-#define NUMPIXELS      5
+#define PIN            8
+#define NUMPIXELS      60
 
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800); 
+Adafruit_NeoPixel pixels[] = {Adafruit_NeoPixel(NUMPIXELS, 9, NEO_GRB + NEO_KHZ800)};
 uint32_t lightstrip [NUMPIXELS];
 
 void setup() {
   Serial.begin(9600); // opens serial port, sets data rate to 9600 bps
-
-  // Set all the pixels to red 
-  uint32_t red = pixels.Color(255, 0, 0); 
-  for (int i=0; i<NUMPIXELS; i++) {
-    lightstrip[i] = red;
+  for (int i=0; i < sizeof(pixels); i++){
+    // Set all the pixels to red 
+    uint32_t red = pixels[i].Color(255,0,0); 
+    for (int i=0; i<NUMPIXELS; i++) {
+      lightstrip[i] = red;
+    }
+    pixels[i].begin(); // This initializes the NeoPixel library
+    updateLightStrip(i, 255,0,0);
+    pixels[i].show();
   }
-  pixels.begin(); // This initializes the NeoPixel library
-  updateLightStrip(255, 0, 0);
-  pixels.show();
 }
 
 void loop() {
   /**
-   * Serial data MUST come in the form <mode>,255,0,0
+   * Serial data MUST come in the form <pin>,<mode>,255,0,0
    */
    Serial.flush();
    if (Serial.available() > 0) {
+      int pin = Serial.parseInt();
       int mode = Serial.parseInt(); // not used currently
       int red = Serial.parseInt();
       int green = Serial.parseInt();
       int blue = Serial.parseInt();
       if (isValidRGB(red) && isValidRGB(green) && isValidRGB(blue)) {
-        updateLightStrip(red, green, blue);
+        updateLightStrip(pin, red, green, blue);
       }
    }
 }
@@ -52,19 +54,19 @@ bool isValidRGB(int color){
   }
 }
 
-bool updateLightStrip(int red, int green, int blue){
+bool updateLightStrip(int pin, int red, int green, int blue){
   // shift existing colors in array
   for (int i = NUMPIXELS-1; i > 0; i--) {
     lightstrip[i] = lightstrip[i-1];
   }
   // Add the new color to the beginning
-  lightstrip[0] = pixels.Color(red, green, blue);
+  lightstrip[0] = pixels[0].Color(red, green, blue);
    
    // set pixels to the new colors
    for(int i = 0; i < NUMPIXELS; i++){
-    pixels.setPixelColor(i, lightstrip[i]);
+    pixels[pin].setPixelColor(i, lightstrip[i]);
   }
-  pixels.show(); // This sends the updated pixel color to the hardware.
+  pixels[pin].show(); // This sends the updated pixel color to the hardware.
   return true;
 }
 

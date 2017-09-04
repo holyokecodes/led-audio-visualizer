@@ -9,7 +9,7 @@ CHUNK = 2**11
 RATE = 44100
 MAX_AMP = 16000.0 # <- Adjust this based on input level
 MAX_FREQ = 10000.0
-PORT = '/dev/cu.usbmodem100'
+PORT = '/dev/cu.usbmodem1411'
 
 # Within each mode type, we can define many color ramps
 # We will reference these by the index of the ramp
@@ -17,7 +17,9 @@ ramp_index = 0
 
 # switch between amplitude, frequency, and random modes
 # amplitude = 0 frequency = 1 random = 2
-mode_type = 1
+mode_type = 0
+
+pins = [0]
 
 amp_color_ramps = [((0, 0, 0), (0, 0, 0), (54, 2, 2), (90, 0, 0), (126, 0, 0), (165, 0, 0), (209, 0, 0), (237, 0, 0), (255, 0, 0), (255, 35, 35), (255, 76, 76), (255, 115, 115), (255, 148, 148), (255, 187, 187), (255, 226, 226)),
 ((0, 0, 0), (0, 0, 0), (2, 54, 2), (0, 90, 0), (0, 126, 0), (0, 165, 0), (0, 209, 0), (0, 237, 0), (0, 237, 0), (35, 255, 35), (76, 255, 76), (115, 255, 115), (148, 255, 148), (187, 255, 187), (226, 255, 226)), 
@@ -71,8 +73,8 @@ while True:
     #            color = freq_colors[j]
 
     # Arduino expects mode, R, G, B over Serial
-    print("{0},{1},{2},{3}".format(mode_type, color[0], color[1], color[2]))
-    ser.write("{0},{1},{2},{3},".format(mode_type, color[0], color[1], color[2]))
+    print("{0},{1},{2},{3},{4}".format(pins[0], mode_type, color[0], color[1], color[2]))
+    ser.write("{0},{1},{2},{3},{4},".format(pins[0], mode_type, color[0], color[1], color[2]))
 
     #counter += 1
     #if (counter > 100):
