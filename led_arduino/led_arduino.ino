@@ -9,39 +9,51 @@
 
 #include <Adafruit_NeoPixel.h>
 
-#define PIN            8
 #define NUMPIXELS      60
 
-Adafruit_NeoPixel pixels[] = {Adafruit_NeoPixel(NUMPIXELS, 9, NEO_GRB + NEO_KHZ800)};
+int counter = 0; 
+
+Adafruit_NeoPixel pixels[] = {Adafruit_NeoPixel(NUMPIXELS, 8, NEO_GRB + NEO_KHZ800),Adafruit_NeoPixel(NUMPIXELS, 9, NEO_GRB + NEO_KHZ800)}; 
 uint32_t lightstrip [NUMPIXELS];
 
 void setup() {
   Serial.begin(9600); // opens serial port, sets data rate to 9600 bps
-  for (int i=0; i < sizeof(pixels); i++){
-    // Set all the pixels to red 
-    uint32_t red = pixels[i].Color(255,0,0); 
-    for (int i=0; i<NUMPIXELS; i++) {
-      lightstrip[i] = red;
-    }
-    pixels[i].begin(); // This initializes the NeoPixel library
-    updateLightStrip(i, 255,0,0);
-    pixels[i].show();
+
+  // Set all the pixels to red 
+  uint32_t red = pixels[0].Color(255, 0, 0); 
+  for (int i=0; i<NUMPIXELS; i++) {
+    lightstrip[i] = red;
   }
+  pixels[0].begin(); // This initializes the NeoPixel library
+  updateLightStrip(255, 0, 0);
+  pixels[0].show();
 }
 
 void loop() {
   /**
-   * Serial data MUST come in the form <pin>,<mode>,255,0,0
+   * Serial data MUST come in the form <mode>,255,0,0
    */
    Serial.flush();
    if (Serial.available() > 0) {
-      int pin = Serial.parseInt();
       int mode = Serial.parseInt(); // not used currently
       int red = Serial.parseInt();
       int green = Serial.parseInt();
       int blue = Serial.parseInt();
       if (isValidRGB(red) && isValidRGB(green) && isValidRGB(blue)) {
-        updateLightStrip(pin, red, green, blue);
+        // runner = 0 whole string = 1 image = 2
+        switch(mode){
+          case 0:
+            pixels[0].setPixelColor(0, pixels[0].Color(0,0,0));
+            updateWholeLightStrip(red, green, blue);
+          case 1:
+            pixels[0].setPixelColor(counter, pixels[0].Color(red, green, blue));
+            counter++;
+            pixels[0].show();
+            counter = 0;
+          default:
+            updateLightStrip(red, green, blue);
+        }
+       
       }
    }
 }
@@ -54,7 +66,7 @@ bool isValidRGB(int color){
   }
 }
 
-bool updateLightStrip(int pin, int red, int green, int blue){
+bool updateLightStrip(int red, int green, int blue){
   // shift existing colors in array
   for (int i = NUMPIXELS-1; i > 0; i--) {
     lightstrip[i] = lightstrip[i-1];
@@ -64,9 +76,17 @@ bool updateLightStrip(int pin, int red, int green, int blue){
    
    // set pixels to the new colors
    for(int i = 0; i < NUMPIXELS; i++){
-    pixels[pin].setPixelColor(i, lightstrip[i]);
+    pixels[0].setPixelColor(i, lightstrip[i]);
   }
-  pixels[pin].show(); // This sends the updated pixel color to the hardware.
+  pixels[0].show(); // This sends the updated pixel color to the hardware.
   return true;
 }
 
+bool updateWholeLightStrip(int red, int green, int blue){
+  //set pixels to new color
+  for(int i = 0; i < NUMPIXELS; i++){
+    pixels[0].setPixelColor(i, pixels[0].Color(red, green, blue));
+  }
+  pixels[0].show();
+  return true;
+}
