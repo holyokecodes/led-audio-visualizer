@@ -11,7 +11,9 @@ RATE = 44100
 MAX_AMP = 16000.0 # <- Adjust this based on input level
 MAX_FREQ = 10000.0
 RATE_OF_CHANGE = 500 # amount to adjust max values
-PORT = '/dev/cu.usbmodem108'
+PORT_A = '/dev/cu.usbmodem112'
+PORT_B = '/dev/cu.usbmodem1411'
+
 
 # arrow key codes
 left_arrow  = 37
@@ -27,17 +29,17 @@ current_freq = MAX_FREQ;
 
 # amp vs freq will be hard coded for now
 # 0 = amp 1 = freq
-amp_freq = 1;
+amp_freq = 0;
 
 # switch between running, whole string, image
 # controlled with the Makey Makey controller
 # running = 0, whole string = 1, image = 2
-mode_type = 0  #always default to amplitude
+mode_type = 1  #always default to amplitude
 
 # controlled with the Makey Makey controller
 # if we have n numbers of ramps in a mode, then if mod(n+1) = 0 then we can change modes
 # current index inside the current color_ramps[mode_type] array
-ramp_index = 0 
+ramp_index = 5 
 
 color_ramps = [((0, 0, 0), (0, 0, 0), (54, 2, 2), (90, 0, 0), (126, 0, 0), (165, 0, 0), (209, 0, 0), (237, 0, 0), (255, 0, 0), (255, 35, 35), (255, 76, 76), (255, 115, 115), (255, 148, 148), (255, 187, 187), (255, 226, 226)),
 ((0, 0, 0), (0, 0, 0), (2, 54, 2), (0, 90, 0), (0, 126, 0), (0, 165, 0), (0, 209, 0), (0, 237, 0), (0, 237, 0), (35, 255, 35), (76, 255, 76), (115, 255, 115), (148, 255, 148), (187, 255, 187), (226, 255, 226)), 
@@ -52,7 +54,8 @@ p=pyaudio.PyAudio()
 stream=p.open(format=pyaudio.paInt16,channels=1,rate=RATE,input=True,
               frames_per_buffer=CHUNK)
 
-ser = serial.Serial(port=PORT, baudrate=9600)
+ser1 = serial.Serial(port=PORT_A, baudrate=9600)
+ser2 = serial.Serial(port=PORT_B, baudrate=9600)
 
 def Pitch(signal):
     signal = np.fromstring(signal, 'Int16');
@@ -98,6 +101,7 @@ while True:
         #use the amplitude mode
         peak=np.average(np.abs(data))*2
         amp = peak/current_amp
+        print "%f Amplitutde" %amp    
         #print peak
         for j in range(num_colors):
             if amp > j/(float(num_colors)):
@@ -119,7 +123,8 @@ while True:
 
     # Arduino expects mode, R, G, B over Serial
     print("{0},{1},{2},{3}".format(mode_type, color[0], color[1], color[2]))
-    ser.write("{0},{1},{2},{3},".format(mode_type, color[0], color[1], color[2]))
+    ser1.write("{0},{1},{2},{3},".format(mode_type, color[0], color[1], color[2]))
+    ser2.write("{0},{1},{2},{3},".format(mode_type, color[0], color[1], color[2]))
 
     #testing loop should be replaced by keypress code
     # counter += 1
@@ -137,7 +142,8 @@ while True:
     #     counter = 0
 
 
-ser.close()
+ser1.close()
+ser2.close()
 stream.stop_stream()
 stream.close()
 p.terminate()
