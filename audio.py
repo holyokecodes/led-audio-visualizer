@@ -6,22 +6,18 @@ import serial
 import keyboard
 
 
-CHUNK = 2**11
+CHUNK = 2**12
 RATE = 44100
-MAX_AMP = 16000.0 # <- Adjust this based on input level
+MAX_AMP = 10000.0 # <- Adjust this based on input level
 MAX_FREQ = 10000.0
 RATE_OF_CHANGE = 500 # amount to adjust max values
-PORT_A = '/dev/cu.usbmodem112'
-PORT_B = '/dev/cu.usbmodem1411'
+PORT_A = '/dev/ttyACM0'
+PORT_B = '/dev/ttyACM1'
 
 
 # arrow key codes
-left_arrow  = 37
 up_arrow    = 38
-right_arrow = 39
 down_arrow  = 40
-
-counter = 0
 
 # current vars
 current_amp = MAX_AMP;
@@ -34,12 +30,12 @@ amp_freq = 0;
 # switch between running, whole string, image
 # controlled with the Makey Makey controller
 # running = 0, whole string = 1, image = 2
-mode_type = 1  #always default to amplitude
+mode_type = 0  #always default to amplitude
 
 # controlled with the Makey Makey controller
 # if we have n numbers of ramps in a mode, then if mod(n+1) = 0 then we can change modes
 # current index inside the current color_ramps[mode_type] array
-ramp_index = 5 
+ramp_index = 0
 
 color_ramps = [((0, 0, 0), (0, 0, 0), (54, 2, 2), (90, 0, 0), (126, 0, 0), (165, 0, 0), (209, 0, 0), (237, 0, 0), (255, 0, 0), (255, 35, 35), (255, 76, 76), (255, 115, 115), (255, 148, 148), (255, 187, 187), (255, 226, 226)),
 ((0, 0, 0), (0, 0, 0), (2, 54, 2), (0, 90, 0), (0, 126, 0), (0, 165, 0), (0, 209, 0), (0, 237, 0), (0, 237, 0), (35, 255, 35), (76, 255, 76), (115, 255, 115), (148, 255, 148), (187, 255, 187), (226, 255, 226)), 
@@ -55,7 +51,7 @@ stream=p.open(format=pyaudio.paInt16,channels=1,rate=RATE,input=True,
               frames_per_buffer=CHUNK)
 
 ser1 = serial.Serial(port=PORT_A, baudrate=9600)
-ser2 = serial.Serial(port=PORT_B, baudrate=9600)
+#ser2 = serial.Serial(port=PORT_B, baudrate=9600)
 
 def Pitch(signal):
     signal = np.fromstring(signal, 'Int16');
@@ -64,56 +60,44 @@ def Pitch(signal):
     f0=round(len(index) *RATE /(2*np.prod(len(signal))))
     return f0;
 
+# we want to cycle through the color_ramp array and for each index
+# we will first display the running mode, then we will display the
+# full strip mode
+def cycleMode():
+    global ramp_index
+    global mode_type
+        
+    if mode_type < 1:
+        mode_type += 1        
+    else:
+        mode_type = 0
+        #change the ramp
+        if (ramp_index < len(color_ramps)-1):
+            ramp_index += 1
+        else:
+            ramp_index = 0
+    print "mode: {}", mode_type
+    print "ramp index: {}", ramp_index
+
+keyboard.add_hotkey('space', lambda: cycleMode())
 
 while True:
-    #detect keypress and if we receive the right key we will increment a counter
-    #if keyboard.is_pressed('space'): 
-    #    ramp_index+=1
-        # if ramp_index == len(color_ramps) - 1:
-        #     #change the mode and reset the counter
-        #     ramp_index = 0;
-        #     if (mode_type < 2):
-        #         mode_type+=1;
-        #     else:
-        #         mode_type = 0;            
-        # else:
-        #     #increase the counter inside the same mode
-        #     ramp_index+=1;
-
-
     data = np.fromstring(stream.read(CHUNK),dtype=np.int16)
 
     #set the number of color ramps we have
-    print "ramp_index %i" %ramp_index
     num_colors = len(color_ramps[ramp_index])
-    print "num_colors %i" %num_colors
-
-
+    
     #determine the mode and act accordingly
     if amp_freq == 0:
-        # if keyboard.is_pressed(down_arrow): 
-        #     if (current_amp > RATE_OF_CHANGE): # whats the lowest we can go here
-        #         current_amp = current_amp - RATE_OF_CHANGE
-        # if keyboard.is_pressed(up_arrow): 
-        #     if (current_amp < MAX_AMP):
-        #         current_amp = current_amp + RATE_OF_CHANGE
-
-        #use the amplitude mode
+        
         peak=np.average(np.abs(data))*2
         amp = peak/current_amp
-        print "%f Amplitutde" %amp    
+        print "%f Amplitutde" %peak    
         #print peak
         for j in range(num_colors):
             if amp > j/(float(num_colors)):
                 color = color_ramps[ramp_index][j]
     elif amp_freq == 1:
-        # if keyboard.is_pressed(down_arrow): 
-        #     if (current_freq > RATE_OF_CHANGE): #whats the lowest we can go here?
-        #         current_freq = current_freq - RATE_OF_CHANGE
-        # if keyboard.is_pressed(up_arrow): 
-        #     if (current_freq < MAX_FREQ):
-        #         current_freq = current_freq + RATE_OF_CHANGE
-
         #use the frequency mode
         Frequency=Pitch(data)
         print "%f Frequency" %Frequency        
@@ -124,26 +108,13 @@ while True:
     # Arduino expects mode, R, G, B over Serial
     print("{0},{1},{2},{3}".format(mode_type, color[0], color[1], color[2]))
     ser1.write("{0},{1},{2},{3},".format(mode_type, color[0], color[1], color[2]))
-    ser2.write("{0},{1},{2},{3},".format(mode_type, color[0], color[1], color[2]))
+    #ser2.write("{0},{1},{2},{3},".format(mode_type, color[0], color[1], color[2]))
 
-    #testing loop should be replaced by keypress code
-    # counter += 1
-    # if (counter > 100):
-    #     if ramp_index == len(color_ramps) - 1:
-    #         #change the mode and reset the counter
-    #         ramp_index = 0;
-    #         # if (mode_type < 2):
-    #         #     mode_type+=1;
-    #         # else:
-    #         #     mode_type = 0;            
-    #     else:
-    #         #increase the counter inside the same mode
-    #         ramp_index+=1;
-    #     counter = 0
+  
 
 
 ser1.close()
-ser2.close()
+#ser2.close()
 stream.stop_stream()
 stream.close()
 p.terminate()

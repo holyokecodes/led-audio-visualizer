@@ -21,12 +21,8 @@ void setup() {
   Serial.begin(9600); // opens serial port, sets data rate to 9600 bps
 
   // Set all the pixels to red 
-  uint32_t red = pixels.Color(255, 0, 0); 
-  for (int i=0; i<NUMPIXELS; i++) {
-    lightstrip[i] = red;
-  }
   pixels.begin(); // This initializes the NeoPixel library
-  updateLightStrip(255, 0, 0);
+  updateWholeLightStrip(0, 0, 100);
   pixels.show();
 }
 

@@ -2,4 +2,5 @@ matplotlib
 numpy
 pyaudio
 pyserial
+keyboard
 
