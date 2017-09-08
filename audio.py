@@ -5,17 +5,17 @@ import math
 import serial
 from time import time
 import random
-#import keyboard
+import keyboard
 
 
 CHUNK = 2**11
 RATE = 44100
-MAX_AMP = 10000.0 # <- Adjust this based on input level
+MAX_AMP = 50000.0 # <- Adjust this based on input level
 MAX_FREQ = 10000.0
 RATE_OF_CHANGE = 500 # amount to adjust max values
-#PORT_A = '/dev/ttyACM0'
+PORT_A = 'COM16'
 #PORT_B = '/dev/ttyACM1'
-PORT_A = '/dev/cu.usbmodem56'
+#PORT_A = '/dev/cu.usbmodem56'
 
 # Screensaver settings
 NAP_TIME = 5 # Seconds before screensaver starts
@@ -87,7 +87,7 @@ def cycleMode():
     print "mode: {}", mode_type
     print "ramp index: {}", ramp_index
 
-#keyboard.add_hotkey('space', lambda: cycleMode())
+keyboard.add_hotkey('space', lambda: cycleMode())
 
 while True:
     data = np.fromstring(stream.read(CHUNK),dtype=np.int16)
