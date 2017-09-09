@@ -87,9 +87,17 @@ def cycleMode():
     print "mode: {}", mode_type
     print "ramp index: {}", ramp_index
 
-keyboard.add_hotkey('space', lambda: cycleMode())
+def shutdown():
+    global keep_going
+    keep_going = False
 
-while True:
+keyboard.add_hotkey('space', lambda: cycleMode())
+keyboard.add_hotkey('esc', lambda: shutdown())
+
+keep_going = True
+    
+while keep_going:
+    print keep_going
     data = np.fromstring(stream.read(CHUNK),dtype=np.int16)
 
     #set the number of color ramps we have
