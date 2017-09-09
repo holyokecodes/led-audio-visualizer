@@ -9,3 +9,11 @@ sudo pip install keyboard
 ```
 
 Download https://github.com/adafruit/Adafruit_NeoPixel/archive/master.zip and import library into Arduino.
+
+On Windows:
+
+```
+c:\Python27\Scripts\pip.exe install matplotlib keyboard pyaudio pyserial
+```
+
+Install the Adafruit Neopixel library through Sketch -> Include Libraries -> Manage Libraries.
