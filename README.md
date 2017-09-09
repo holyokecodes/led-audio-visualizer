@@ -15,4 +15,5 @@ On Windows:
 ```
 c:\Python27\Scripts\pip.exe install matplotlib keyboard pyaudio pyserial
 ```
-                 
+
+Install the Adafruit Neopixel library through Sketch -> Include Libraries -> Manage Libraries.
