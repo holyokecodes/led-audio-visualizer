@@ -99,11 +99,11 @@ while True:
     if amp_freq == 0:
         peak=np.average(np.abs(data))*2
         amp = peak/current_amp
-        print "%f Amplitude" % peak
+        #print "%f Amplitude" % peak
 
         # Screensaver
         if amp < 1/float(num_colors): # It is quiet
-            print ("It is quiet")
+            #print ("It is quiet")
             if time() - sleep_time > NAP_TIME:
                 if not(napping_color): # Assign a random screensaver color 
                     napping_color = [random.randint(0,20), 0, random.randint(0,20)] # Screensaver color
@@ -126,7 +126,7 @@ while True:
                 color = color_ramps[ramp_index][j]
 
     # Arduino expects mode, R, G, B over Serial
-    print("{0},{1},{2},{3}".format(mode_type, color[0], color[1], color[2]))
+    #print("{0},{1},{2},{3}".format(mode_type, color[0], color[1], color[2]))
     ser1.write("{0},{1},{2},{3},".format(mode_type, color[0], color[1], color[2]))
     #ser2.write("{0},{1},{2},{3},".format(mode_type, color[0], color[1], color[2]))
 
