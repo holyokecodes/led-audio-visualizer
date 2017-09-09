@@ -97,7 +97,6 @@ keyboard.add_hotkey('esc', lambda: shutdown())
 keep_going = True
     
 while keep_going:
-    print keep_going
     data = np.fromstring(stream.read(CHUNK),dtype=np.int16)
 
     #set the number of color ramps we have
